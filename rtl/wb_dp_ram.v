@@ -33,7 +33,8 @@ module wb_dp_ram #
 (
     parameter DATA_WIDTH = 32,                // width of data bus in bits (8, 16, 32, or 64)
     parameter ADDR_WIDTH = 16,                // width of address bus in bits
-    parameter SELECT_WIDTH = (DATA_WIDTH/8)   // width of word select bus (1, 2, 4, or 8)
+    parameter SELECT_WIDTH = (DATA_WIDTH/8),  // width of word select bus (1, 2, 4, or 8)
+    parameter INIT_FILE  = ""
 )
 (
     // port A
@@ -75,8 +76,8 @@ reg b_ack_o_reg = 1'b0;
 // (* RAM_STYLE="BLOCK" *)
 reg [DATA_WIDTH-1:0] mem[(2**VALID_ADDR_WIDTH)-1:0];
 
-wire [VALID_ADDR_WIDTH-1:0] a_adr_i_valid = a_adr_i >> (ADDR_WIDTH - VALID_ADDR_WIDTH);
-wire [VALID_ADDR_WIDTH-1:0] b_adr_i_valid = b_adr_i >> (ADDR_WIDTH - VALID_ADDR_WIDTH);
+wire [VALID_ADDR_WIDTH-1:0] a_adr_i_valid = VALID_ADDR_WIDTH'(a_adr_i >> (ADDR_WIDTH - VALID_ADDR_WIDTH));
+wire [VALID_ADDR_WIDTH-1:0] b_adr_i_valid = VALID_ADDR_WIDTH'(b_adr_i >> (ADDR_WIDTH - VALID_ADDR_WIDTH));
 
 assign a_dat_o = a_dat_o_reg;
 assign a_ack_o = a_ack_o_reg;
@@ -87,11 +88,16 @@ assign b_ack_o = b_ack_o_reg;
 integer i, j;
 
 initial begin
-    // two nested loops for smaller number of iterations per loop
-    // workaround for synthesizer complaints about large loop counts
-    for (i = 0; i < 2**ADDR_WIDTH; i = i + 2**(ADDR_WIDTH/2)) begin
-        for (j = i; j < i + 2**(ADDR_WIDTH/2); j = j + 1) begin
-            mem[j] = 0;
+    if (INIT_FILE != "") begin
+        $readmemh(INIT_FILE, mem);
+    end
+    else begin
+        // two nested loops for smaller number of iterations per loop
+        // workaround for synthesizer complaints about large loop counts
+        for (i = 0; i < 2**ADDR_WIDTH; i = i + 2**(ADDR_WIDTH/2)) begin
+            for (j = i; j < i + 2**(ADDR_WIDTH/2); j = j + 1) begin
+                mem[j] = 0;
+            end
         end
     end
 end
