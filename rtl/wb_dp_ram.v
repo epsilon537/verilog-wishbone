@@ -85,11 +85,13 @@ module wb_dp_ram #(
 
   integer i, j;
 
-`ifndef OPENXC7
+  //No 0-init when using OpenXC7. Yosys elaboration takes too long.
   initial begin
     if (INIT_FILE != "") begin
       $readmemh(INIT_FILE, mem);
-    end else begin
+    end
+`ifndef OPENXC7
+    else begin
       // two nested loops for smaller number of iterations per loop
       // workaround for synthesizer complaints about large loop counts
       for (i = 0; i < 2 ** ADDR_WIDTH; i = i + 2 ** (ADDR_WIDTH / 2)) begin
@@ -98,8 +100,8 @@ module wb_dp_ram #(
         end
       end
     end
-  end
 `endif
+  end
 
   // port A
   always @(posedge a_clk) begin
