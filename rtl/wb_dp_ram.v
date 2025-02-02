@@ -83,7 +83,7 @@ module wb_dp_ram #(
   assign b_dat_o = b_dat_o_reg;
   assign b_ack_o = b_ack_o_reg;
 
-  integer i, j;
+  integer i;
 
   //No 0-init. Yosys elaboration takes too long.
   initial begin
