@@ -90,7 +90,7 @@ module {{name}} #
     input  wire                    wbm_stb_i,     // STB_I strobe input
     output wire                    wbm_ack_o,     // ACK_O acknowledge output
     output wire                    wbm_err_o,     // ERR_O error output
-    output wire                    wbm_rty_o,     // RTY_O retry output
+    output wire                    wbm_stall_o,     // STALL_O retry output
     input  wire                    wbm_cyc_i,     // CYC_I cycle input
     {%- for p in ports %}
 
@@ -105,7 +105,7 @@ module {{name}} #
     output wire                    wbs{{p}}_stb_o,    // STB_O strobe output
     input  wire                    wbs{{p}}_ack_i,    // ACK_I acknowledge input
     input  wire                    wbs{{p}}_err_i,    // ERR_I error input
-    input  wire                    wbs{{p}}_rty_i,    // RTY_I retry input
+    input  wire                    wbs{{p}}_stall_i,    // STALL_I retry input
     output wire                    wbs{{p}}_cyc_o,    // CYC_O cycle output
 
     /*
@@ -136,7 +136,7 @@ assign wbm_ack_o = {% for p in ports %}wbs{{p}}_ack_i{% if not loop.last %} |
 assign wbm_err_o = {% for p in ports %}wbs{{p}}_err_i |
                    {% endfor %}select_error;
 
-assign wbm_rty_o = {% for p in ports %}wbs{{p}}_rty_i{% if not loop.last %} |
+assign wbm_stall_o = {% for p in ports %}wbs{{p}}_stall_i{% if not loop.last %} |
                    {% endif %}{% endfor %};
 {% for p in ports %}
 // slave {{p}}
@@ -151,14 +151,14 @@ assign wbs{{p}}_cyc_o = wbm_cyc_i & wbs{{p}}_sel;
 endmodule
 
 """)
-    
+
     output_file.write(t.render(
         n=ports,
         w=select_width,
         name=name,
         ports=range(ports)
     ))
-    
+
     print("Done")
 
 if __name__ == "__main__":
