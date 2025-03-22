@@ -27,9 +27,9 @@ THE SOFTWARE.
 `timescale 1 ns / 1 ps
 
 /*
- * Wishbone 2 port arbiter
+ * Wishbone 4 port arbiter
  */
-module wb_arbiter_2 #
+module wb_arbiter_4 #
 (
     parameter DATA_WIDTH = 32,                    // width of data bus in bits (8, 16, 32, or 64)
     parameter ADDR_WIDTH = 32,                    // width of address bus in bits
@@ -71,6 +71,34 @@ module wb_arbiter_2 #
     input  wire                    wbm1_cyc_i,    // CYC_I cycle input
 
     /*
+     * Wishbone master 2 input
+     */
+    input  wire [ADDR_WIDTH-1:0]   wbm2_adr_i,    // ADR_I() address input
+    input  wire [DATA_WIDTH-1:0]   wbm2_dat_i,    // DAT_I() data in
+    output wire [DATA_WIDTH-1:0]   wbm2_dat_o,    // DAT_O() data out
+    input  wire                    wbm2_we_i,     // WE_I write enable input
+    input  wire [SELECT_WIDTH-1:0] wbm2_sel_i,    // SEL_I() select input
+    input  wire                    wbm2_stb_i,    // STB_I strobe input
+    output wire                    wbm2_ack_o,    // ACK_O acknowledge output
+    output wire                    wbm2_err_o,    // ERR_O error output
+    output wire                    wbm2_stall_o,    // STALL_O retry output
+    input  wire                    wbm2_cyc_i,    // CYC_I cycle input
+
+    /*
+     * Wishbone master 3 input
+     */
+    input  wire [ADDR_WIDTH-1:0]   wbm3_adr_i,    // ADR_I() address input
+    input  wire [DATA_WIDTH-1:0]   wbm3_dat_i,    // DAT_I() data in
+    output wire [DATA_WIDTH-1:0]   wbm3_dat_o,    // DAT_O() data out
+    input  wire                    wbm3_we_i,     // WE_I write enable input
+    input  wire [SELECT_WIDTH-1:0] wbm3_sel_i,    // SEL_I() select input
+    input  wire                    wbm3_stb_i,    // STB_I strobe input
+    output wire                    wbm3_ack_o,    // ACK_O acknowledge output
+    output wire                    wbm3_err_o,    // ERR_O error output
+    output wire                    wbm3_stall_o,    // STALL_O retry output
+    input  wire                    wbm3_cyc_i,    // CYC_I cycle input
+
+    /*
      * Wishbone slave output
      */
     output wire [ADDR_WIDTH-1:0]   wbs_adr_o,     // ADR_O() address output
@@ -85,14 +113,18 @@ module wb_arbiter_2 #
     output wire                    wbs_cyc_o      // CYC_O cycle output
 );
 
-wire [1:0] request;
-wire [1:0] grant;
+wire [3:0] request;
+wire [3:0] grant;
 
 assign request[0] = wbm0_cyc_i;
 assign request[1] = wbm1_cyc_i;
+assign request[2] = wbm2_cyc_i;
+assign request[3] = wbm3_cyc_i;
 
 wire wbm0_sel = grant[0] & grant_valid;
 wire wbm1_sel = grant[1] & grant_valid;
+wire wbm2_sel = grant[2] & grant_valid;
+wire wbm3_sel = grant[3] & grant_valid;
 
 // master 0
 assign wbm0_dat_o = wbs_dat_i;
@@ -106,34 +138,58 @@ assign wbm1_ack_o = wbs_ack_i & wbm1_sel;
 assign wbm1_err_o = wbs_err_i & wbm1_sel;
 assign wbm1_stall_o = wbs_stall_i & wbm1_sel;
 
+// master 2
+assign wbm2_dat_o = wbs_dat_i;
+assign wbm2_ack_o = wbs_ack_i & wbm2_sel;
+assign wbm2_err_o = wbs_err_i & wbm2_sel;
+assign wbm2_stall_o = wbs_stall_i & wbm2_sel;
+
+// master 3
+assign wbm3_dat_o = wbs_dat_i;
+assign wbm3_ack_o = wbs_ack_i & wbm3_sel;
+assign wbm3_err_o = wbs_err_i & wbm3_sel;
+assign wbm3_stall_o = wbs_stall_i & wbm3_sel;
+
 // slave
 assign wbs_adr_o = wbm0_sel ? wbm0_adr_i :
                    wbm1_sel ? wbm1_adr_i :
+                   wbm2_sel ? wbm2_adr_i :
+                   wbm3_sel ? wbm3_adr_i :
                    {ADDR_WIDTH{1'b0}};
 
 assign wbs_dat_o = wbm0_sel ? wbm0_dat_i :
                    wbm1_sel ? wbm1_dat_i :
+                   wbm2_sel ? wbm2_dat_i :
+                   wbm3_sel ? wbm3_dat_i :
                    {DATA_WIDTH{1'b0}};
 
 assign wbs_we_o = wbm0_sel ? wbm0_we_i :
                   wbm1_sel ? wbm1_we_i :
+                  wbm2_sel ? wbm2_we_i :
+                  wbm3_sel ? wbm3_we_i :
                   1'b0;
 
 assign wbs_sel_o = wbm0_sel ? wbm0_sel_i :
                    wbm1_sel ? wbm1_sel_i :
+                   wbm2_sel ? wbm2_sel_i :
+                   wbm3_sel ? wbm3_sel_i :
                    {SELECT_WIDTH{1'b0}};
 
 assign wbs_stb_o = wbm0_sel ? wbm0_stb_i :
                    wbm1_sel ? wbm1_stb_i :
+                   wbm2_sel ? wbm2_stb_i :
+                   wbm3_sel ? wbm3_stb_i :
                    1'b0;
 
 assign wbs_cyc_o = wbm0_sel ? 1'b1 :
                    wbm1_sel ? 1'b1 :
+                   wbm2_sel ? 1'b1 :
+                   wbm3_sel ? 1'b1 :
                    1'b0;
 
 // arbiter instance
 arbiter #(
-    .PORTS(2),
+    .PORTS(4),
     .ARB_TYPE_ROUND_ROBIN(ARB_TYPE_ROUND_ROBIN),
     .ARB_BLOCK(1),
     .ARB_BLOCK_ACK(ARB_BLOCK_ACK),

@@ -76,6 +76,7 @@ module {{name}} #
     parameter SELECT_WIDTH = (DATA_WIDTH/8),      // width of word select bus (1, 2, 4, or 8)
     parameter ARB_TYPE_ROUND_ROBIN = 0,           // select round robin arbitration
     parameter ARB_LSB_HIGH_PRIORITY = 1           // LSB priority selection
+    parameter ARB_BLOCK_ACK = 1,                  // block ack generation
 )
 (
     input  wire                    clk,
@@ -93,7 +94,7 @@ module {{name}} #
     input  wire                    wbm{{p}}_stb_i,    // STB_I strobe input
     output wire                    wbm{{p}}_ack_o,    // ACK_O acknowledge output
     output wire                    wbm{{p}}_err_o,    // ERR_O error output
-    output wire                    wbm{{p}}_rty_o,    // RTY_O retry output
+    output wire                    wbm{{p}}_stall_o,    // STALL_O retry output
     input  wire                    wbm{{p}}_cyc_i,    // CYC_I cycle input
 {%- endfor %}
 
@@ -108,7 +109,7 @@ module {{name}} #
     output wire                    wbs_stb_o,     // STB_O strobe output
     input  wire                    wbs_ack_i,     // ACK_I acknowledge input
     input  wire                    wbs_err_i,     // ERR_I error input
-    input  wire                    wbs_rty_i,     // RTY_I retry input
+    input  wire                    wbs_stall_i,     // STALL_I retry input
     output wire                    wbs_cyc_o      // CYC_O cycle output
 );
 
@@ -126,7 +127,7 @@ wire wbm{{p}}_sel = grant[{{p}}] & grant_valid;
 assign wbm{{p}}_dat_o = wbs_dat_i;
 assign wbm{{p}}_ack_o = wbs_ack_i & wbm{{p}}_sel;
 assign wbm{{p}}_err_o = wbs_err_i & wbm{{p}}_sel;
-assign wbm{{p}}_rty_o = wbs_rty_i & wbm{{p}}_sel;
+assign wbm{{p}}_stall_o = wbs_stall_i & wbm{{p}}_sel;
 {%- endfor %}
 
 // slave
@@ -153,7 +154,7 @@ arbiter #(
     .PORTS({{n}}),
     .ARB_TYPE_ROUND_ROBIN(ARB_TYPE_ROUND_ROBIN),
     .ARB_BLOCK(1),
-    .ARB_BLOCK_ACK(0),
+    .ARB_BLOCK_ACK(ARB_BLOCK_ACK),
     .ARB_LSB_HIGH_PRIORITY(ARB_LSB_HIGH_PRIORITY)
 )
 arb_inst (
@@ -169,14 +170,14 @@ arb_inst (
 endmodule
 
 """)
-    
+
     output_file.write(t.render(
         n=ports,
         w=select_width,
         name=name,
         ports=range(ports)
     ))
-    
+
     print("Done")
 
 if __name__ == "__main__":
