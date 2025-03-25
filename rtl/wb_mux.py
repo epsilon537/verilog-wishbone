@@ -136,7 +136,7 @@ assign wbm_ack_o = {% for p in ports %}wbs{{p}}_ack_i{% if not loop.last %} |
 assign wbm_err_o = {% for p in ports %}wbs{{p}}_err_i |
                    {% endfor %}select_error;
 
-assign wbm_stall_o = {% for p in ports %}wbs{{p}}_stall_i{% if not loop.last %} |
+assign wbm_stall_o = {% for p in ports %}(wbs{{p}}_sel & wbs{{p}}_stall_i){% if not loop.last %} |
                    {% endif %}{% endfor %};
 {% for p in ports %}
 // slave {{p}}

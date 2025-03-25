@@ -116,8 +116,8 @@ assign wbm_err_o = wbs0_err_i |
                    wbs1_err_i |
                    select_error;
 
-assign wbm_stall_o = wbs0_stall_i |
-                   wbs1_stall_i;
+assign wbm_stall_o = (wbs0_sel & wbs0_stall_i) |
+                   (wbs1_sel & wbs1_stall_i);
 
 // slave 0
 assign wbs0_adr_o = wbm_adr_i;

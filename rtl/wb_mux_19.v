@@ -541,25 +541,25 @@ assign wbm_err_o = wbs0_err_i |
                    wbs18_err_i |
                    select_error;
 
-assign wbm_stall_o = wbs0_stall_i |
-                   wbs1_stall_i |
-                   wbs2_stall_i |
-                   wbs3_stall_i |
-                   wbs4_stall_i |
-                   wbs5_stall_i |
-                   wbs6_stall_i |
-                   wbs7_stall_i |
-                   wbs8_stall_i |
-                   wbs9_stall_i |
-                   wbs10_stall_i |
-                   wbs11_stall_i |
-                   wbs12_stall_i |
-                   wbs13_stall_i |
-                   wbs14_stall_i |
-                   wbs15_stall_i |
-                   wbs16_stall_i |
-                   wbs17_stall_i |
-                   wbs18_stall_i;
+assign wbm_stall_o = (wbs0_sel & wbs0_stall_i) |
+                   (wbs1_sel & wbs1_stall_i) |
+                   (wbs2_sel & wbs2_stall_i) |
+                   (wbs3_sel & wbs3_stall_i) |
+                   (wbs4_sel & wbs4_stall_i) |
+                   (wbs5_sel & wbs5_stall_i) |
+                   (wbs6_sel & wbs6_stall_i) |
+                   (wbs7_sel & wbs7_stall_i) |
+                   (wbs8_sel & wbs8_stall_i) |
+                   (wbs9_sel & wbs9_stall_i) |
+                   (wbs10_sel & wbs10_stall_i) |
+                   (wbs11_sel & wbs11_stall_i) |
+                   (wbs12_sel & wbs12_stall_i) |
+                   (wbs13_sel & wbs13_stall_i) |
+                   (wbs14_sel & wbs14_stall_i) |
+                   (wbs15_sel & wbs15_stall_i) |
+                   (wbs16_sel & wbs16_stall_i) |
+                   (wbs17_sel & wbs17_stall_i) |
+                   (wbs18_sel & wbs18_stall_i);
 
 // slave 0
 assign wbs0_adr_o = wbm_adr_i;

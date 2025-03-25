@@ -75,8 +75,10 @@ module {{name}} #
     parameter ADDR_WIDTH = 32,                    // width of address bus in bits
     parameter SELECT_WIDTH = (DATA_WIDTH/8),      // width of word select bus (1, 2, 4, or 8)
     parameter ARB_TYPE_ROUND_ROBIN = 0,           // select round robin arbitration
-    parameter ARB_LSB_HIGH_PRIORITY = 1           // LSB priority selection
+    parameter ARB_LSB_HIGH_PRIORITY = 1,          // LSB priority selection
     parameter ARB_BLOCK_ACK = 1,                  // block ack generation
+    parameter ARB_DEFAULT_TO_LOW_PRIORITY = 0     // BoxLambda: Default to lowest priority if there is no request.
+                                                  // This reduces latency on the lowest priority port.
 )
 (
     input  wire                    clk,
@@ -115,11 +117,17 @@ module {{name}} #
 
 wire [{{n-1}}:0] request;
 wire [{{n-1}}:0] grant;
+wire [{{n-1}}:0] acknowledge;
+wire grant_valid;
+
 {% for p in ports %}
 assign request[{{p}}] = wbm{{p}}_cyc_i;
 {%- endfor %}
 {% for p in ports %}
 wire wbm{{p}}_sel = grant[{{p}}] & grant_valid;
+{%- endfor %}
+{% for p in ports %}
+assign acknowledge[{{p}}] = wbm{{p}}_ack_o;
 {%- endfor %}
 {%- for p in ports %}
 
@@ -127,7 +135,7 @@ wire wbm{{p}}_sel = grant[{{p}}] & grant_valid;
 assign wbm{{p}}_dat_o = wbs_dat_i;
 assign wbm{{p}}_ack_o = wbs_ack_i & wbm{{p}}_sel;
 assign wbm{{p}}_err_o = wbs_err_i & wbm{{p}}_sel;
-assign wbm{{p}}_stall_o = wbs_stall_i & wbm{{p}}_sel;
+assign wbm{{p}}_stall_o = wbs_stall_i | ~wbm{{p}}_sel;
 {%- endfor %}
 
 // slave
@@ -146,7 +154,7 @@ assign wbs_sel_o = {% for p in ports %}wbm{{p}}_sel ? wbm{{p}}_sel_i :
 assign wbs_stb_o = {% for p in ports %}wbm{{p}}_sel ? wbm{{p}}_stb_i :
                    {% endfor %}1'b0;
 
-assign wbs_cyc_o = {% for p in ports %}wbm{{p}}_sel ? 1'b1 :
+assign wbs_cyc_o = {% for p in ports %}wbm{{p}}_sel ? wbm{{p}}_cyc_i :
                    {% endfor %}1'b0;
 
 // arbiter instance
@@ -155,13 +163,14 @@ arbiter #(
     .ARB_TYPE_ROUND_ROBIN(ARB_TYPE_ROUND_ROBIN),
     .ARB_BLOCK(1),
     .ARB_BLOCK_ACK(ARB_BLOCK_ACK),
-    .ARB_LSB_HIGH_PRIORITY(ARB_LSB_HIGH_PRIORITY)
+    .ARB_LSB_HIGH_PRIORITY(ARB_LSB_HIGH_PRIORITY),
+    .ARB_DEFAULT_TO_LOW_PRIORITY(ARB_DEFAULT_TO_LOW_PRIORITY)
 )
 arb_inst (
     .clk(clk),
     .rst(rst),
     .request(request),
-    .acknowledge(),
+    .acknowledge(acknowledge),
     .grant(grant),
     .grant_valid(grant_valid),
     .grant_encoded()
