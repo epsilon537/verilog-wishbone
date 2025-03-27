@@ -39,9 +39,9 @@ module arbiter #(
     parameter ARB_BLOCK_ACK = 1,
     // LSB priority selection
     parameter ARB_LSB_HIGH_PRIORITY = 0,
-    // BoxLambda: Default to lowest priority if there is no request.
-    // This reduces latency on the lowest priority port.
-    parameter ARB_DEFAULT_TO_LOW_PRIORITY = 0
+    // BoxLambda: Default to port 0 if there is no request.
+    // This reduces latency on port 0.
+    parameter ARB_DEFAULT_TO_PORT_0 = 0
 ) (
     input wire clk,
     input wire rst,
@@ -132,15 +132,10 @@ module arbiter #(
         grant_encoded_next = request_index;
       end
     end else begin
-      if (ARB_DEFAULT_TO_LOW_PRIORITY) begin
+      if (ARB_DEFAULT_TO_PORT_0) begin
         grant_valid_next = 1;
-        if (ARB_LSB_HIGH_PRIORITY) begin
-          grant_next = {1'b1, {PORTS - 1{1'b0}}};
-          grant_encoded_next = PORTS - 1;
-        end else begin
-          grant_next = {{PORTS - 1{1'b0}}, 1'b1};
-          grant_encoded_next = 1;
-        end
+        grant_next = {{PORTS - 1{1'b0}}, 1'b1};
+        grant_encoded_next = 1;
       end else begin
         grant_next = 0;
         grant_valid_next = 0;
