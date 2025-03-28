@@ -27,9 +27,9 @@ THE SOFTWARE.
 `timescale 1 ns / 1 ps
 
 /*
- * Wishbone 19 port multiplexer
+ * Wishbone 18 port multiplexer
  */
-module wb_mux_19 #
+module wb_mux_18 #
 (
     parameter DATA_WIDTH = 32,                    // width of data bus in bits (8, 16, 32, or 64)
     parameter ADDR_WIDTH = 32,                    // width of address bus in bits
@@ -411,27 +411,7 @@ module wb_mux_19 #
      * Wishbone slave 17 address configuration
      */
     input  wire [ADDR_WIDTH-1:0]   wbs17_addr,     // Slave address prefix
-    input  wire [ADDR_WIDTH-1:0]   wbs17_addr_msk, // Slave address prefix mask
-
-    /*
-     * Wishbone slave 18 output
-     */
-    output wire [ADDR_WIDTH-1:0]   wbs18_adr_o,    // ADR_O() address output
-    input  wire [DATA_WIDTH-1:0]   wbs18_dat_i,    // DAT_I() data in
-    output wire [DATA_WIDTH-1:0]   wbs18_dat_o,    // DAT_O() data out
-    output wire                    wbs18_we_o,     // WE_O write enable output
-    output wire [SELECT_WIDTH-1:0] wbs18_sel_o,    // SEL_O() select output
-    output wire                    wbs18_stb_o,    // STB_O strobe output
-    input  wire                    wbs18_ack_i,    // ACK_I acknowledge input
-    input  wire                    wbs18_err_i,    // ERR_I error input
-    input  wire                    wbs18_stall_i,    // STALL_I retry input
-    output wire                    wbs18_cyc_o,    // CYC_O cycle output
-
-    /*
-     * Wishbone slave 18 address configuration
-     */
-    input  wire [ADDR_WIDTH-1:0]   wbs18_addr,     // Slave address prefix
-    input  wire [ADDR_WIDTH-1:0]   wbs18_addr_msk  // Slave address prefix mask
+    input  wire [ADDR_WIDTH-1:0]   wbs17_addr_msk  // Slave address prefix mask
 );
 
 wire wbs0_match = ~|((wbm_adr_i ^ wbs0_addr) & wbs0_addr_msk);
@@ -452,7 +432,6 @@ wire wbs14_match = ~|((wbm_adr_i ^ wbs14_addr) & wbs14_addr_msk);
 wire wbs15_match = ~|((wbm_adr_i ^ wbs15_addr) & wbs15_addr_msk);
 wire wbs16_match = ~|((wbm_adr_i ^ wbs16_addr) & wbs16_addr_msk);
 wire wbs17_match = ~|((wbm_adr_i ^ wbs17_addr) & wbs17_addr_msk);
-wire wbs18_match = ~|((wbm_adr_i ^ wbs18_addr) & wbs18_addr_msk);
 
 wire wbs0_sel = wbs0_match;
 wire wbs1_sel = wbs1_match & ~(wbs0_match);
@@ -472,11 +451,10 @@ wire wbs14_sel = wbs14_match & ~(wbs0_match | wbs1_match | wbs2_match | wbs3_mat
 wire wbs15_sel = wbs15_match & ~(wbs0_match | wbs1_match | wbs2_match | wbs3_match | wbs4_match | wbs5_match | wbs6_match | wbs7_match | wbs8_match | wbs9_match | wbs10_match | wbs11_match | wbs12_match | wbs13_match | wbs14_match);
 wire wbs16_sel = wbs16_match & ~(wbs0_match | wbs1_match | wbs2_match | wbs3_match | wbs4_match | wbs5_match | wbs6_match | wbs7_match | wbs8_match | wbs9_match | wbs10_match | wbs11_match | wbs12_match | wbs13_match | wbs14_match | wbs15_match);
 wire wbs17_sel = wbs17_match & ~(wbs0_match | wbs1_match | wbs2_match | wbs3_match | wbs4_match | wbs5_match | wbs6_match | wbs7_match | wbs8_match | wbs9_match | wbs10_match | wbs11_match | wbs12_match | wbs13_match | wbs14_match | wbs15_match | wbs16_match);
-wire wbs18_sel = wbs18_match & ~(wbs0_match | wbs1_match | wbs2_match | wbs3_match | wbs4_match | wbs5_match | wbs6_match | wbs7_match | wbs8_match | wbs9_match | wbs10_match | wbs11_match | wbs12_match | wbs13_match | wbs14_match | wbs15_match | wbs16_match | wbs17_match);
 
 wire master_cycle = wbm_cyc_i & wbm_stb_i;
 
-wire select_error = ~(wbs0_sel | wbs1_sel | wbs2_sel | wbs3_sel | wbs4_sel | wbs5_sel | wbs6_sel | wbs7_sel | wbs8_sel | wbs9_sel | wbs10_sel | wbs11_sel | wbs12_sel | wbs13_sel | wbs14_sel | wbs15_sel | wbs16_sel | wbs17_sel | wbs18_sel) & master_cycle;
+wire select_error = ~(wbs0_sel | wbs1_sel | wbs2_sel | wbs3_sel | wbs4_sel | wbs5_sel | wbs6_sel | wbs7_sel | wbs8_sel | wbs9_sel | wbs10_sel | wbs11_sel | wbs12_sel | wbs13_sel | wbs14_sel | wbs15_sel | wbs16_sel | wbs17_sel) & master_cycle;
 
 // master
 assign wbm_dat_o = wbs0_sel ? wbs0_dat_i :
@@ -497,7 +475,6 @@ assign wbm_dat_o = wbs0_sel ? wbs0_dat_i :
                    wbs15_sel ? wbs15_dat_i :
                    wbs16_sel ? wbs16_dat_i :
                    wbs17_sel ? wbs17_dat_i :
-                   wbs18_sel ? wbs18_dat_i :
                    {DATA_WIDTH{1'b0}};
 
 assign wbm_ack_o = wbs0_ack_i |
@@ -517,8 +494,7 @@ assign wbm_ack_o = wbs0_ack_i |
                    wbs14_ack_i |
                    wbs15_ack_i |
                    wbs16_ack_i |
-                   wbs17_ack_i |
-                   wbs18_ack_i;
+                   wbs17_ack_i;
 
 assign wbm_err_o = wbs0_err_i |
                    wbs1_err_i |
@@ -538,7 +514,6 @@ assign wbm_err_o = wbs0_err_i |
                    wbs15_err_i |
                    wbs16_err_i |
                    wbs17_err_i |
-                   wbs18_err_i |
                    select_error;
 
 assign wbm_stall_o = (wbs0_sel & wbs0_stall_i) |
@@ -558,8 +533,7 @@ assign wbm_stall_o = (wbs0_sel & wbs0_stall_i) |
                    (wbs14_sel & wbs14_stall_i) |
                    (wbs15_sel & wbs15_stall_i) |
                    (wbs16_sel & wbs16_stall_i) |
-                   (wbs17_sel & wbs17_stall_i) |
-                   (wbs18_sel & wbs18_stall_i);
+                   (wbs17_sel & wbs17_stall_i);
 
 // slave 0
 assign wbs0_adr_o = wbm_adr_i;
@@ -704,14 +678,6 @@ assign wbs17_we_o = wbm_we_i & wbs17_sel;
 assign wbs17_sel_o = wbm_sel_i;
 assign wbs17_stb_o = wbm_stb_i & wbs17_sel;
 assign wbs17_cyc_o = wbm_cyc_i & wbs17_sel;
-
-// slave 18
-assign wbs18_adr_o = wbm_adr_i;
-assign wbs18_dat_o = wbm_dat_i;
-assign wbs18_we_o = wbm_we_i & wbs18_sel;
-assign wbs18_sel_o = wbm_sel_i;
-assign wbs18_stb_o = wbm_stb_i & wbs18_sel;
-assign wbs18_cyc_o = wbm_cyc_i & wbs18_sel;
 
 
 endmodule
